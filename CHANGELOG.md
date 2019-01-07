@@ -26,6 +26,7 @@
 * Restrict ransack requirement to >= 2.1.1 to play nice with Rails 5.2.2. [#5632] by [@deivid-rodriguez]
 * Bad interpolation variables on pagination keys in Lithuanian translation. [#5631] by [@deivid-rodriguez]
 * Tabs are not correctly created when using non-transliteratable characters as title. [#5650] by [@panasyuk]
+* Switch `sass` dependency to `sassc-rails`, since `sass` is no longer supported and since it restores support for directly importing `css` files. [#5504] by [@deivid-rodriguez]
 
 ### Removals
 
@@ -398,6 +399,7 @@ Please check [0-6-stable] for previous changes.
 [#5464]: https://github.com/activeadmin/activeadmin/pull/5464
 [#5486]: https://github.com/activeadmin/activeadmin/pull/5486
 [#5501]: https://github.com/activeadmin/activeadmin/pull/5501
+[#5504]: https://github.com/activeadmin/activeadmin/pull/5504
 [#5517]: https://github.com/activeadmin/activeadmin/pull/5517
 [#5537]: https://github.com/activeadmin/activeadmin/pull/5537
 [#5583]: https://github.com/activeadmin/activeadmin/pull/5583
