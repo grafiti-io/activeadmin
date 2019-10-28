@@ -92,11 +92,11 @@ module ActiveAdmin
       end
 
       def build_pagination
-        options = { theme: 'active_admin' }
+        options = { theme: @display_total ? 'active_admin' : 'active_admin_countless' }
         options[:params]     = @params     if @params
         options[:param_name] = @param_name if @param_name
 
-        if !@display_total && collection.respond_to?(:offset)
+        if !@display_total
           # The #paginate method in kaminari will query the resource with a
           # count(*) to determine how many pages there should be unless
           # you pass in the :total_pages option. We issue a query to determine
@@ -123,6 +123,7 @@ module ActiveAdmin
           entries_name = I18n.t "active_admin.pagination.entry", count: 2, default: 'entries'
         else
           key = "activerecord.models." + collection.first.class.model_name.i18n_key.to_s
+
           entry_name   = I18n.translate key, count: 1,               default: collection.first.class.name.underscore.sub('_', ' ')
           entries_name = I18n.translate key, count: collection.size, default: entry_name.pluralize
         end

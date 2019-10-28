@@ -135,7 +135,7 @@ RSpec.describe ActiveAdmin::Application do
         FileUtils.touch(test_file)
         expect(application.files).to include(test_file)
       ensure
-        ActiveSupport::Dependencies.clear
+        ActiveSupport::Dependencies.clear unless ActiveAdmin::Dependency.supports_zeitwerk?
         FileUtils.remove_entry_secure(test_dir, force: true)
       end
     end
@@ -174,7 +174,7 @@ RSpec.describe ActiveAdmin::Application do
     it "finds or create the namespace and register the page to it" do
       namespace = double
       expect(application).to receive(:namespace).with("public").and_return namespace
-      expect(namespace).to receive(:register_page).with("My Page", {namespace: "public"})
+      expect(namespace).to receive(:register_page).with("My Page", { namespace: "public" })
       application.register_page("My Page", namespace: "public")
     end
   end

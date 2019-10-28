@@ -6,7 +6,9 @@ Dir["#{File.expand_path('../step_definitions', __dir__)}/*.rb"].each do |f|
   require f
 end
 
-require_relative "../../tmp/rails/rails-#{Gem.loaded_specs["rails"].version}/config/environment"
+require_relative "../../tasks/test_application"
+
+require "#{ActiveAdmin::TestApplication.new.full_app_dir}/config/environment.rb"
 
 require_relative 'rails'
 
@@ -47,19 +49,8 @@ Before '@javascript' do
   Capybara.current_driver = Capybara.javascript_driver
 end
 
-Capybara.register_driver :chrome do |app|
-  Capybara::Selenium::Driver.load_selenium
-
-  options = Selenium::WebDriver::Chrome::Options.new
-  options.args << '--headless'
-
-  http_client = Selenium::WebDriver::Remote::Http::Default.new
-  http_client.read_timeout = 180
-
-  Capybara::Selenium::Driver.new(app, browser: :chrome, options: options, http_client: http_client)
-end
-
-Capybara.javascript_driver = :chrome
+require "capybara/apparition"
+Capybara.javascript_driver = :apparition
 
 Capybara.server = :webrick
 
@@ -86,7 +77,7 @@ end
 Before do
   # We are caching classes, but need to manually clear references to
   # the controllers. If they aren't clear, the router stores references
-  ActiveSupport::Dependencies.clear
+  ActiveSupport::Dependencies.clear unless ActiveAdmin::Dependency.supports_zeitwerk?
 
   # Reload Active Admin
   ActiveAdmin.unload!

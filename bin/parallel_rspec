@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-ENV["BUNDLER_VERSION"] = "2.0.1"
+load File.expand_path("bundle", __dir__)
 
 require "bundler/setup"
 

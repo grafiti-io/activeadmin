@@ -9,9 +9,9 @@ RSpec.describe ActiveAdmin::Filters::ActiveFilter do
     namespace.register(Post)
   end
 
-  let(:user){ User.create! first_name: "John", last_name: "Doe" }
-  let(:category){ Category.create! name: "Category" }
-  let(:post){ Post.create! title: "Hello World", category: category, author: user }
+  let(:user) { User.create! first_name: "John", last_name: "Doe" }
+  let(:category) { Category.create! name: "Category" }
+  let(:post) { Post.create! title: "Hello World", category: category, author: user }
 
   let(:search) do
     Post.ransack(title_equals: post.title)
@@ -29,8 +29,20 @@ RSpec.describe ActiveAdmin::Filters::ActiveFilter do
     expect(subject.values).to eq([post.title])
   end
 
-  it 'should have valid label' do
-    expect(subject.label).to eq("Title equals")
+  describe 'label' do
+    context 'by default' do
+      it 'should have valid label' do
+        expect(subject.label).to eq("Title equals")
+      end
+    end
+
+    context 'with formtastic translations' do
+      it 'should pick up formtastic label' do
+        with_translation formtastic: { labels: { title: 'Supertitle' } } do
+          expect(subject.label).to eq("Supertitle equals")
+        end
+      end
+    end
   end
 
   it 'should pick predicate name translation' do
@@ -154,6 +166,30 @@ RSpec.describe ActiveAdmin::Filters::ActiveFilter do
 
       expect(subject.label).to eq("#{label.call} equals")
     end
+
+    context 'when filter condition has a predicate' do
+      let(:search) do
+        Post.ransack(title_cont: "Hello")
+      end
+
+      it 'should use the filter label as the label prefix' do
+        label = "#{user.first_name}'s Post"
+        resource.add_filter(:title_cont, label: label)
+        expect(subject.label).to eq("#{label} contains")
+      end
+    end
+
+    context 'when filter condition has multiple fields' do
+      let(:search) do
+        Post.ransack(title_or_body_cont: "Hello World")
+      end
+
+      it 'should use the filter label as the label prefix' do
+        label = "#{user.first_name}'s Post"
+        resource.add_filter(:title_or_body_cont, label: label)
+        expect(subject.label).to eq("#{label} contains")
+      end
+    end
   end
 
   context "the association uses a different primary_key than the related class' primary_key" do
@@ -171,10 +207,10 @@ RSpec.describe ActiveAdmin::Filters::ActiveFilter do
       namespace.register(resource_klass)
     end
 
-    let(:user){ User.create! first_name: "John", last_name: "Doe" }
-    let!(:category){ Category.create! name: "Category" }
+    let(:user) { User.create! first_name: "John", last_name: "Doe" }
+    let!(:category) { Category.create! name: "Category" }
 
-    let(:post){ resource_klass.create! title: "Category", author: user }
+    let(:post) { resource_klass.create! title: "Category", author: user }
 
     let(:search) do
       resource_klass.ransack(title_equals: post.title)

@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe ActiveAdmin::Application do
-  let(:application){ ActiveAdmin::Application.new }
-  let(:controllers){ application.controllers_for_filters }
+  let(:application) { ActiveAdmin::Application.new }
+  let(:controllers) { application.controllers_for_filters }
 
   it 'controllers_for_filters' do
     expect(application.controllers_for_filters).to eq [
@@ -17,10 +17,6 @@ RSpec.describe ActiveAdmin::Application do
     positions = %w(before around after)
     suffixes = %w(action)
     base = %w()
-    if ActiveAdmin::Dependency.rails? '< 5.1.x'
-      suffixes += %w(filter)
-      base += %w(skip_filter skip_action_callback)
-    end
 
     prefixes.each_with_object(base) do |prefix, stack|
       positions.each do |position|

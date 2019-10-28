@@ -192,6 +192,13 @@ module ActiveAdmin
     # end
     # ```
     #
+    # You can also define associated objects to include outside of the
+    # `scoped_collection` method:
+    #
+    # ```ruby
+    # includes :publisher
+    # ```
+    #
     # Then it's simple to sort by any Publisher attribute from within the index table:
     #
     # ```ruby
@@ -374,7 +381,7 @@ module ActiveAdmin
           end
           if controller.action_methods.include?('destroy') && authorized?(ActiveAdmin::Auth::DESTROY, resource)
             item localizer.t(:delete), resource_path(resource), class: "delete_link #{options[:css_class]}", title: localizer.t(:delete),
-              method: :delete, data: {confirm: localizer.t(:delete_confirmation)}
+              method: :delete, data: { confirm: localizer.t(:delete_confirmation) }
           end
         end
 

@@ -13,11 +13,10 @@ RSpec.describe ActiveAdmin::ViewHelpers::DisplayHelper do
       include MethodOrProcHelper
       include ActionView::Helpers::UrlHelper
       include ActionView::Helpers::TranslationHelper
-      include ActionView::Helpers::SanitizeHelper
     end
   end
 
-  let(:active_admin_namespace){ view.active_admin_application.namespaces[:admin] }
+  let(:active_admin_namespace) { view.active_admin_application.namespaces[:admin] }
 
   let(:view) { mock_action_view(view_klass) }
 
@@ -30,7 +29,7 @@ RSpec.describe ActiveAdmin::ViewHelpers::DisplayHelper do
 
     load_resources do
       ActiveAdmin.register(User)
-      ActiveAdmin.register(Post){ belongs_to :user, optional: true }
+      ActiveAdmin.register(Post) { belongs_to :user, optional: true }
     end
   end
 
@@ -58,7 +57,7 @@ RSpec.describe ActiveAdmin::ViewHelpers::DisplayHelper do
         end
 
         it "should sanitize the result of #{m}" do
-          expect(displayed_name).to eq 'alert(1)'
+          expect(displayed_name).to eq '&lt;script&gt;alert(1)&lt;/script&gt;'
         end
       end
     end
@@ -106,7 +105,7 @@ RSpec.describe ActiveAdmin::ViewHelpers::DisplayHelper do
       it "should default to `to_s`" do
         result = resource.to_s
 
-        expect(displayed_name).to eq view.sanitize(result)
+        expect(displayed_name).to eq ERB::Util.html_escape(result)
       end
     end
 
@@ -133,7 +132,7 @@ RSpec.describe ActiveAdmin::ViewHelpers::DisplayHelper do
         end
 
         it "should translate the model name" do
-          with_translation activerecord: {models: {tagging: {one: "Different"}}} do
+          with_translation activerecord: { models: { tagging: { one: "Different" } } } do
             expect(displayed_name).to eq "Different #1"
           end
         end
@@ -155,7 +154,7 @@ RSpec.describe ActiveAdmin::ViewHelpers::DisplayHelper do
     end
 
     it 'finds values from hashes' do
-      value = view.format_attribute({id: 100}, :id)
+      value = view.format_attribute({ id: 100 }, :id)
 
       expect(value).to eq '100'
     end

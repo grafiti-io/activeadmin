@@ -27,7 +27,7 @@ Then /^I (should|should not) see the batch action (button|selector)$/ do |maybe,
   expect(page).send verb, have_css(selector)
 end
 
-Then /^I should see the batch action popover exists$/ do
+Then /^I should see the batch action popover$/ do
   expect(page).to have_css '.batch_actions_selector'
 end
 
@@ -35,7 +35,8 @@ Given /^I submit the batch action form with "([^"]*)"$/ do |action|
   page.find("#batch_action", visible: false).set action
   form   = page.find "#collection_selection"
   params = page.all("#main_content input", visible: false).each_with_object({}) do |input, obj|
-    key, value = input['name'], input['value']
+    key = input['name']
+    value = input['value']
     if key == 'collection_selection[]'
       (obj[key] ||= []).push value if input.checked?
     else

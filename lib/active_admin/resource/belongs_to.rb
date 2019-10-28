@@ -14,8 +14,13 @@ module ActiveAdmin
       # The resource which initiated this relationship
       attr_reader :owner
 
+      # The name of the relation
+      attr_reader :target_name
+
       def initialize(owner, target_name, options = {})
-        @owner, @target_name, @options = owner, target_name, options
+        @owner = owner
+        @target_name = target_name
+        @options = options
       end
 
       # Returns the target resource class or raises an exception if it doesn't exist

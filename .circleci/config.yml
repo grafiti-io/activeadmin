@@ -5,19 +5,24 @@ version: 2.1
 .install_rubygems: &install_rubygems
   run:
     name: Install a specific rubygems version
-    command: gem update --system 3.0.2
+    command: gem update --system 3.0.6
 
 .install_bundler: &install_bundler
   run:
     name: Install a specific bundler version
-    command: gem install bundler -v 2.0.1
+    command: gem install bundler -v 2.0.2
+
+.install_build_deps: &install_build_deps
+  run:
+    name: Install build dependencies so that sassc-rails extension builds
+    command: sudo apt install make gcc g++
 
 .copy_current_gemfile: &copy_current_gemfile
   run:
     name: Cat current Gemfile to a specific file so caching works
     command: cat "$BUNDLE_GEMFILE.lock" > current_gemfile.lock
 
-.restore_cache: &restore_cache
+.restore_gems: &restore_gems
   restore_cache:
     keys:
       - bundler-dependencies-{{ checksum "current_gemfile.lock" }}-{{ .Environment.CIRCLE_JOB }}
@@ -25,14 +30,9 @@ version: 2.1
 .install_dependencies: &install_dependencies
   run:
     name: Install dependencies
-    command: BUNDLER_VERSION=2.0.1 bundle install --path /home/circleci/project/vendor/bundle --retry 3 --jobs 3
+    command: bundle install --path /root/project/vendor/bundle --retry 3 --jobs 3
 
-.install_chromedriver: &install_chromedriver
-  run:
-    name: Install chromedriver
-    command: bin/install_chromedriver.sh
-
-.save_cache: &save_cache
+.save_gems: &save_gems
   save_cache:
     key: bundler-dependencies-{{ checksum "current_gemfile.lock" }}-{{ .Environment.CIRCLE_JOB }}
     paths:
@@ -41,7 +41,11 @@ version: 2.1
 .create_test_app: &create_test_app
   run:
     name: Create test app
-    command: PARALLEL_TEST_PROCESSORS=4 bin/rake setup
+    command: COVERAGE=true PARALLEL_TEST_PROCESSORS=4 bin/rake setup
+
+.restore_test_reporter: &restore_test_reporter
+  attach_workspace:
+    at: bin
 
 .restore_coverage: &restore_coverage
   attach_workspace:
@@ -50,7 +54,7 @@ version: 2.1
 .format_coverage: &format_coverage
   run:
     name: Format coverage
-    command: coverage/test-reporter format-coverage --input-type simplecov --output coverage/codeclimate.$CIRCLE_JOB.json
+    command: bin/test-reporter format-coverage --input-type simplecov --output coverage/codeclimate.$CIRCLE_JOB.json
 
 .save_coverage: &save_coverage
   persist_to_workspace:
@@ -62,18 +66,19 @@ version: 2.1
   run:
     name: Upload coverage results to Code Climate
     command: |
-      coverage/test-reporter sum-coverage coverage/codeclimate.*.json --parts 16 --output coverage/codeclimate.total.json
-      coverage/test-reporter upload-coverage --input coverage/codeclimate.total.json
+      # The parts number should match the number of jobs under upload_coverage/requires
+      bin/test-reporter sum-coverage coverage/codeclimate.*.json --parts 12 --output coverage/codeclimate.total.json
+      bin/test-reporter upload-coverage --input coverage/codeclimate.total.json
 
-.save_test_app_to_workspace: &save_test_app_to_workspace
+.save_test_app: &save_test_app
   persist_to_workspace:
-    root: tmp/rails
+    root: tmp/test_apps
     paths:
-      - rails-*
+      - rails_*
 
 .restore_test_app_from_workspace: &restore_test_app_from_workspace
   attach_workspace:
-    at: tmp/rails
+    at: tmp/test_apps
 
 .restore_test_times: &restore_test_times
   restore_cache:
@@ -85,14 +90,14 @@ version: 2.1
   run:
     name: Run RSpec tests
     command: |
-      COVERAGE=true PARALLEL_TEST_PROCESSORS=4 bin/parallel_rspec spec/
+      COVERAGE=true PARALLEL_TEST_PROCESSORS=4 PARALLEL_TEST_HEARTBEAT_INTERVAL=3600 bin/parallel_rspec spec/
       COVERAGE=true RSPEC_FILESYSTEM_CHANGES=true bin/rspec
 
 .run_features: &run_features
   run:
     name: Run Cucumber features
     command: |
-      COVERAGE=true PARALLEL_TEST_PROCESSORS=4 bin/parallel_cucumber features/
+      COVERAGE=true PARALLEL_TEST_PROCESSORS=4 PARALLEL_TEST_HEARTBEAT_INTERVAL=3600 bin/parallel_cucumber features/
       COVERAGE=true bin/cucumber --profile filesystem-changes
       COVERAGE=true bin/cucumber --profile class-reloading
 
@@ -116,20 +121,20 @@ version: 2.1
 .run_bug_report_template: &run_bug_report_template
   run:
     name: Run bug report template
-    command: BUNDLER_VERSION=2.0.1 ACTIVE_ADMIN_PATH=. ruby tasks/bug_report_template.rb
+    command: ACTIVE_ADMIN_PATH=. ruby tasks/bug_report_template.rb
 
 .test_steps: &test_steps
   - checkout
   - *install_rubygems
   - *install_bundler
+  - *install_build_deps
   - *copy_current_gemfile
-  - *restore_cache
+  - *restore_gems
   - *install_dependencies
-  - *install_chromedriver
-  - *save_cache
+  - *save_gems
   - *restore_test_app_from_workspace
   - *restore_test_times
-  - *restore_coverage
+  - *restore_test_reporter
   - *run_tests
   - *run_features
   - *format_coverage
@@ -141,63 +146,59 @@ version: 2.1
   - *install_rubygems
   - *install_bundler
   - *copy_current_gemfile
-  - *restore_cache
+  - *restore_gems
   - *install_dependencies
-  - *save_cache
+  - *restore_test_reporter
+  - *save_gems
   - *create_test_app
-  - *save_test_app_to_workspace
+  - *format_coverage
+  - *save_coverage
+  - *save_test_app
 
 jobs:
   setup_coverage:
     docker:
-      - image: circleci/ruby:2.5.3
+      - image: circleci/ruby:2.6.5
 
     steps:
       - run:
           name: Download Code Climate test-reporter
           command: |
-            mkdir coverage
-            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-0.6.3-linux-amd64 > coverage/test-reporter
-            chmod +x coverage/test-reporter
+            mkdir bin
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-0.6.3-linux-amd64 > bin/test-reporter
+            chmod +x  bin/test-reporter
 
       - persist_to_workspace:
-          root: coverage
+          root: bin
           paths:
             - test-reporter
 
   upload_coverage:
     docker:
-      - image: circleci/ruby:2.5.3
+      - image: circleci/ruby:2.6.5
         environment:
           CC_TEST_REPORTER_ID: 8d5fcf7abea6d56c625104a9d1a81140a588a7f546f4fa9de9bc6ffc8feaaf70
 
     steps:
+      - *restore_test_reporter
       - *restore_coverage
       - *submit_coverage
 
-  testapp50:
-    docker:
-      - image: circleci/ruby:2.5.3-node
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_50.gemfile
-
-    steps:
-      *test_app_steps
-
-  testapp51:
-    docker:
-      - image: circleci/ruby:2.5.3-node
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_51.gemfile
-
-    steps:
-      *test_app_steps
-
   testapp52:
     docker:
-      - image: circleci/ruby:2.5.3-node
+      - image: circleci/ruby:2.6.5-node
+        user: root
+
+    environment:
+      BUNDLE_GEMFILE: gemfiles/rails_52/Gemfile
+
+    steps:
+      *test_app_steps
+
+  testapp60:
+    docker:
+    - image: circleci/ruby:2.6.5-node
+      user: root
 
     environment:
       BUNDLE_GEMFILE: Gemfile
@@ -205,9 +206,21 @@ jobs:
     steps:
       *test_app_steps
 
+  testapp60turbolinks:
+    docker:
+    - image: circleci/ruby:2.6.5-node
+      user: root
+
+    environment:
+      BUNDLE_GEMFILE: gemfiles/rails_60_turbolinks/Gemfile
+
+    steps:
+      *test_app_steps
+
   lint_and_docs:
     docker:
-      - image: circleci/ruby:2.5.3-node
+      - image: circleci/ruby:2.6.5-node
+        user: root
 
     environment:
       BUNDLE_GEMFILE: Gemfile
@@ -217,99 +230,42 @@ jobs:
       - *install_rubygems
       - *install_bundler
       - *copy_current_gemfile
-      - *restore_cache
+      - *restore_gems
       - *install_dependencies
-      - *save_cache
+      - *save_gems
       - *generate_docs
-      - *restore_coverage
+      - *restore_test_reporter
       - *run_lints
       - *run_bug_report_template
       - *format_coverage
       - *save_coverage
 
-  ruby23rails50:
-    docker:
-      - image: circleci/ruby:2.3.8-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_50.gemfile
-
-    steps:
-      *test_steps
-
-  ruby23rails51:
-    docker:
-      - image: circleci/ruby:2.3.8-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_51.gemfile
-
-    steps:
-      *test_steps
-
-  ruby23rails52:
-    docker:
-      - image: circleci/ruby:2.3.8-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: Gemfile
-
-    steps:
-      *test_steps
-
-  ruby24rails50:
-    docker:
-      - image: circleci/ruby:2.4.5-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_50.gemfile
-
-    steps:
-      *test_steps
-
-  ruby24rails51:
-    docker:
-      - image: circleci/ruby:2.4.5-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_51.gemfile
-
-    steps:
-      *test_steps
-
   ruby24rails52:
     docker:
-      - image: circleci/ruby:2.4.5-node-browsers
+      - image: circleci/ruby:2.4.8-node-browsers
+        user: root
 
     environment:
-      BUNDLE_GEMFILE: Gemfile
-
-    steps:
-      *test_steps
-
-  ruby25rails50:
-    docker:
-      - image: circleci/ruby:2.5.3-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_50.gemfile
-
-    steps:
-      *test_steps
-
-  ruby25rails51:
-    docker:
-      - image: circleci/ruby:2.5.3-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_51.gemfile
+      BUNDLE_GEMFILE: gemfiles/rails_52/Gemfile
 
     steps:
       *test_steps
 
   ruby25rails52:
     docker:
-      - image: circleci/ruby:2.5.3-node-browsers
+      - image: circleci/ruby:2.5.7-node-browsers
+        user: root
+
+    environment:
+      BUNDLE_GEMFILE: gemfiles/rails_52/Gemfile
+
+    steps:
+      *test_steps
+
+  ruby25rails60:
+    docker:
+    - image: circleci/ruby:2.5.7-node-browsers
+      user: root
 
     environment:
       BUNDLE_GEMFILE: Gemfile
@@ -317,64 +273,55 @@ jobs:
     steps:
       *test_steps
 
-  jruby91rails50:
+  ruby26rails52:
     docker:
-      - image: circleci/jruby:9.1.17.0-node-browsers
+      - image: circleci/ruby:2.6.5-node-browsers
+        user: root
 
     environment:
-      BUNDLE_GEMFILE: gemfiles/rails_50.gemfile
-      JRUBY_OPTS: -J-Xmx1024m --dev --debug
+      BUNDLE_GEMFILE: gemfiles/rails_52/Gemfile
 
     steps:
       *test_steps
 
-  jruby91rails51:
+  ruby26rails60:
     docker:
-      - image: circleci/jruby:9.1.17.0-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_51.gemfile
-      JRUBY_OPTS: -J-Xmx1024m --dev --debug
-
-    steps:
-      *test_steps
-
-  jruby91rails52:
-    docker:
-      - image: circleci/jruby:9.1.17.0-node-browsers
+    - image: circleci/ruby:2.6.5-node-browsers
+      user: root
 
     environment:
       BUNDLE_GEMFILE: Gemfile
-      JRUBY_OPTS: -J-Xmx1024m --dev --debug
 
     steps:
       *test_steps
 
-  jruby92rails50:
+  ruby26rails60turbolinks:
     docker:
-      - image: circleci/jruby:9.2.5.1-node-browsers
+    - image: circleci/ruby:2.6.5-node-browsers
+      user: root
 
     environment:
-      BUNDLE_GEMFILE: gemfiles/rails_50.gemfile
-      JRUBY_OPTS: -J-Xmx1024m --dev --debug
-
-    steps:
-      *test_steps
-
-  jruby92rails51:
-    docker:
-      - image: circleci/jruby:9.2.5.1-node-browsers
-
-    environment:
-      BUNDLE_GEMFILE: gemfiles/rails_51.gemfile
-      JRUBY_OPTS: -J-Xmx1024m --dev --debug
+      BUNDLE_GEMFILE: gemfiles/rails_60_turbolinks/Gemfile
 
     steps:
       *test_steps
 
   jruby92rails52:
     docker:
-      - image: circleci/jruby:9.2.5.1-node-browsers
+      - image: circleci/jruby:9.2.8.0-node-browsers
+        user: root
+
+    environment:
+      BUNDLE_GEMFILE: gemfiles/rails_52/Gemfile
+      JRUBY_OPTS: -J-Xmx1024m --dev --debug
+
+    steps:
+      *test_steps
+
+  jruby92rails60:
+    docker:
+    - image: circleci/jruby:9.2.8.0-node-browsers
+      user: root
 
     environment:
       BUNDLE_GEMFILE: Gemfile
@@ -403,98 +350,66 @@ workflows:
           requires:
             - setup_coverage
 
-      - testapp50:
-          requires:
-            - setup_coverage
-
-      - testapp51:
-          requires:
-            - setup_coverage
-
       - testapp52:
           requires:
             - setup_coverage
 
-      - ruby23rails50:
+      - testapp60:
           requires:
-            - testapp50
+            - setup_coverage
 
-      - ruby23rails51:
+      - testapp60turbolinks:
           requires:
-            - testapp51
-
-      - ruby23rails52:
-          requires:
-            - testapp52
-
-      - ruby24rails50:
-          requires:
-            - testapp50
-
-      - ruby24rails51:
-          requires:
-            - testapp51
+            - setup_coverage
 
       - ruby24rails52:
           requires:
             - testapp52
 
-      - ruby25rails50:
-          requires:
-            - testapp50
-
-      - ruby25rails51:
-          requires:
-            - testapp51
-
       - ruby25rails52:
           requires:
             - testapp52
 
-      - jruby91rails50:
+      - ruby25rails60:
           requires:
-            - testapp50
+            - testapp60
 
-      - jruby91rails51:
-          requires:
-            - testapp51
-
-      - jruby91rails52:
+      - ruby26rails52:
           requires:
             - testapp52
 
-      - jruby92rails50:
+      - ruby26rails60:
           requires:
-            - testapp50
+            - testapp60
 
-      - jruby92rails51:
+      - ruby26rails60turbolinks:
           requires:
-            - testapp51
+            - testapp60turbolinks
 
       - jruby92rails52:
           requires:
             - testapp52
 
+      - jruby92rails60:
+          requires:
+            - testapp60
+
       - upload_coverage:
           requires:
             - lint_and_docs
 
-            - ruby23rails50
-            - ruby23rails51
-            - ruby23rails52
+            - testapp52
+            - testapp60
+            - testapp60turbolinks
 
-            - ruby24rails50
-            - ruby24rails51
             - ruby24rails52
 
-            - ruby25rails50
-            - ruby25rails51
             - ruby25rails52
+            - ruby25rails60
 
-            - jruby91rails50
-            - jruby91rails51
-            - jruby91rails52
+            - ruby26rails52
+            - ruby26rails60
+            - ruby26rails60turbolinks
 
-            - jruby92rails50
-            - jruby92rails51
             - jruby92rails52
+            - jruby92rails60

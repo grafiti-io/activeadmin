@@ -5,15 +5,15 @@ like you that make Active Admin such a great tool.
 
 ### Where do I go from here?
 
-If you've noticed a bug or have a question that doesn't belong on the
-[mailing list][] or [Stack Overflow][], [search the issue tracker][] to see if
-someone else in the community has already created a ticket. If not, go ahead and
-[make one][new issue]!
+If you've noticed a bug or have a question that doesn't belong on the [mailing
+list] or [Stack Overflow], [search the issue tracker] to see if someone else in
+the community has already created a ticket. If not, go ahead and [make one][new
+issue]!
 
 ### Fork & create a branch
 
-If this is something you think you can fix, then [fork Active Admin][] and
-create a branch with a descriptive name.
+If this is something you think you can fix, then [fork Active Admin] and create
+a branch with a descriptive name.
 
 A good branch name would be (where issue #325 is the ticket you're working on):
 
@@ -26,13 +26,26 @@ git checkout -b 325-add-japanese-translations
 Make sure you're using a recent ruby and have the `bundler` gem installed, at
 least version `1.14.3`.
 
-You'll also need chrome and [chromedriver] installed in order to run cucumber
-scenarios.
+You'll also need chrome installed in order to run cucumber scenarios.
 
 Now install the development dependencies:
 
 ```sh
 bundle install
+```
+
+Then install javascript dependencies with [Yarn] (requires a current version of [Node.js]):
+
+```sh
+bin/yarn install
+```
+
+JS assets are located in `app/javascript/active_admin`. The config will take care of compiling a complete bundle with [Rollup] using the `build` script and exported to `app/assets/javascripts/active_admin/base.js` ready to be used by Sprockets.
+
+To update javascript bundle run (add `-w` flag for watch mode):
+
+```sh
+bin/yarn build
 ```
 
 Now you should be able to run the entire suite using:
@@ -41,30 +54,19 @@ Now you should be able to run the entire suite using:
 bin/rake
 ```
 
-The test run will generate a sample Rails application in `tmp/rails` to run the
+The test run will generate a sample Rails application in `tmp/test_apps` to run the
 tests against.
-
-If your tests are passing locally but they're failing on CircleCI, it's probably
-because of some breaking change or problem with the latest version of some
-dependency. You should be able to reproduce the issue locally by:
-
-* Removing the `Gemfile.lock` file.
-* Running `bundle install`.
-* Re-running the tests again like you did previously.
-
-This is not your fault though, so if this happens feel free to investigate, but
-also feel free to ping maintainers about the issue you just found.
 
 If you want to test against a Rails version different from the latest, make sure
 you use the correct Gemfile, for example:
 
 ```sh
-export BUNDLE_GEMFILE=gemfiles/rails_51.gemfile
+export BUNDLE_GEMFILE=gemfiles/rails_60/Gemfile
 ```
 
 ### Did you find a bug?
 
-* **Ensure the bug was not already reported** by [searching all issues][].
+* **Ensure the bug was not already reported** by [searching all issues].
 
 * If you're unable to find an open issue addressing the problem,
   [open a new one][new issue]. Be sure to include a **title and clear
@@ -78,12 +80,12 @@ export BUNDLE_GEMFILE=gemfiles/rails_51.gemfile
   issue description**:
   * [**ActiveAdmin** master issues][master template]
 
-### 5. Implement your fix or feature
+### Implement your fix or feature
 
 At this point, you're ready to make your changes! Feel free to ask for help;
 everyone is a beginner at first :smile_cat:
 
-### 6. View your changes in a Rails application
+### View your changes in a Rails application
 
 Active Admin is meant to be used by humans, not cucumbers. So make sure to take
 a look at your changes in a browser.
@@ -95,7 +97,7 @@ bin/rake local server
 ```
 
 This will automatically create a Rails app if none already exists, and store it
-in the `.test-rails-apps` folder.
+in the `tmp/development_apps` folder.
 
 You should now be able to open <http://localhost:3000/admin> in your browser.
 You can log in using:
@@ -110,7 +112,8 @@ them to the `local` rake task. For example, to boot the rails console:
 bin/rake local console
 ```
 
-Or to migrate the database:
+Or to migrate the database, if you create a new migration or just play around
+with the db:
 
 ```sh
 bin/rake local db:migrate
@@ -122,6 +125,22 @@ Your patch should follow the same conventions & pass the same code quality
 checks as the rest of the project. `bin/rake lint` will give you feedback in
 this regard. You can check & fix style issues by running each linter
 individually. Run `bin/rake -T lint` to see the available linters.
+
+### Add a changelog entry
+
+If your PR includes user-observable changes, you'll be asked to add a changelog
+entry following the existing changelog format.
+
+The changelog format is the following:
+
+* One line per PR describing your fix or enhancement.
+* Entries end with a dot, followed by "[#pr-number] by [@github-username]".
+* Entries are added under the "Unreleased" section at the top of the file, under
+  the "Bug Fixes" or "Enhancements" subsection.
+* References to github usernames and pull requests use [shortcut reference
+  links].
+* Your github username reference definition is included in the correct
+  alphabetical position at the bottom of the file.
 
 ### Make a Pull Request
 
@@ -203,7 +222,6 @@ Maintainers need to do the following to push out a release:
 * `bin/rake release`
 
 [chandler]: https://github.com/mattbrictson/chandler#2-configure-credentials
-[chromedriver]: https://sites.google.com/a/chromium.org/chromedriver/getting-started
 [mailing list]: http://groups.google.com/group/activeadmin
 [Stack Overflow]: http://stackoverflow.com/questions/tagged/activeadmin
 [search the issue tracker]: https://github.com/activeadmin/activeadmin/issues?q=something
@@ -214,3 +232,7 @@ Maintainers need to do the following to push out a release:
 [make a pull request]: https://help.github.com/articles/creating-a-pull-request
 [git rebasing]: http://git-scm.com/book/en/Git-Branching-Rebasing
 [interactive rebase]: https://help.github.com/articles/interactive-rebase
+[shortcut reference links]: https://github.github.com/gfm/#shortcut-reference-link
+[Rollup]: https://rollupjs.org/guide/en/#quick-start
+[Yarn]: https://yarnpkg.com/en/docs/install
+[Node.js]: https://nodejs.org/en/

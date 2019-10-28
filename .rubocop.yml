@@ -4,19 +4,23 @@ inherit_mode:
   merge:
     - Include
 
-require: rubocop-rspec
+require:
+  - rubocop-rails
+  - rubocop-rspec
 
 AllCops:
   DisabledByDefault: true
-  TargetRubyVersion: 2.3
+  TargetRubyVersion: 2.4
 
   Exclude:
-    - tmp/rails/**/*
-    - gemfiles/vendor/bundle/**/*
+    - tmp/development_apps/**/*
+    - tmp/test_apps/**/*
+    - gemfiles/rails_52/vendor/bundle/**/*
+    - gemfiles/rails_60_turbolinks/vendor/bundle/**/*
     - vendor/bundle/**/*
 
   Include:
-    - gemfiles/*.gemfile
+    - gemfiles/*/Gemfile
     - .simplecov
 
   DisplayCopNames: true
@@ -53,9 +57,6 @@ Layout/EndOfLine:
 Layout/ExtraSpacing:
   Enabled: true
 
-Rails:
-  Enabled: true
-
 Rails/FilePath:
   Enabled: true
   EnforcedStyle: slashes
@@ -77,6 +78,9 @@ Style/FrozenStringLiteralComment:
   EnforcedStyle: never
 
 Style/HashSyntax:
+  Enabled: true
+
+Style/ParallelAssignment:
   Enabled: true
 
 Layout/IndentationConsistency:
@@ -109,6 +113,18 @@ Layout/SpaceAfterComma:
   Enabled: true
 
 Layout/SpaceAroundEqualsInParameterDefault:
+  Enabled: true
+
+Layout/SpaceAroundOperators:
+  Enabled: true
+
+Layout/SpaceBeforeBlockBraces:
+  Enabled: true
+
+Layout/SpaceInsideBlockBraces:
+  Enabled: true
+
+Layout/SpaceInsideHashLiteralBraces:
   Enabled: true
 
 Layout/SpaceInsideParens:
