@@ -38,7 +38,7 @@ module ActiveAdmin
       #   download_links => Download links override (false or [:csv, :pdf])
       #
       def build(collection, options = {})
-        Rails.logger.info options[:some_attr]
+        puts "options[:some_attr]: #{options[:some_attr]}"
         @collection     = collection
         @params         = options.delete(:params)
         @param_name     = options.delete(:param_name)
