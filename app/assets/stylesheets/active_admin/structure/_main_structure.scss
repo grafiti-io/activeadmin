@@ -14,7 +14,7 @@
     float: left;
     margin-left: 20px;
     // width: 100%;
-    width: 100% - $sidebar-width + 20px;
+    width: calc(100% - calc(#{$sidebar-width} + 20px));
 
     // #main_content{
     //   // margin-right: $sidebar-width + ($section-padding * 2);
