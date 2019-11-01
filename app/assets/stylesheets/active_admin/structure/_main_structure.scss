@@ -16,10 +16,10 @@
     // width: 100%;
     width: calc(100% - calc(#{$sidebar-width} + 20px));
 
-    // #main_content{
-    //   // margin-right: $sidebar-width + ($section-padding * 2);
-    //   margin-left: 30px;
-    // }
+    #main_content{
+      // margin-right: $sidebar-width + ($section-padding * 2);
+      padding-right: $sidebar-width;
+    }
   }
 
   // &.without_sidebar #main_content_wrapper #main_content{ margin-right: 0; }
