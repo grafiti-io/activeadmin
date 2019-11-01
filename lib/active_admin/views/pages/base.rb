@@ -78,8 +78,10 @@ module ActiveAdmin
         def build_page_content
           build_flash_messages
           div id: "active_admin_content", class: (skip_sidebar? ? "without_sidebar" : "with_sidebar") do
-            build_main_content_wrapper
+            # moves sidebar to the left of the index's collection table
             sidebar sidebar_sections_for_action, id: 'sidebar' unless skip_sidebar?
+            build_main_content_wrapper
+            # sidebar sidebar_sections_for_action, id: 'sidebar' unless skip_sidebar?
           end
         end
 
