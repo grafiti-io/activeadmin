@@ -1,3 +1,12 @@
+// -------------------------------------- Index Header (Above Table)
+#index_header {
+  height: 20px;
+  padding-bottom: 5px;
+  text-align: right;
+  font-size: 0.85em;
+  width: calc(100% + #{$sidebar-width});
+}
+
 .paginated_collection_contents {
   clear: both;
 }

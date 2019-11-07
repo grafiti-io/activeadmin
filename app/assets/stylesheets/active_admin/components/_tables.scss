@@ -24,6 +24,8 @@ table.index_table {
     border-right: none;
     padding-left: $cell-horizontal-padding;
     padding-right: $cell-horizontal-padding;
+    position: sticky;
+    top: 0;
 
     a, a:link, a:visited {
       color: $section-header-text-color;
