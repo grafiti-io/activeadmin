@@ -96,6 +96,7 @@ module ActiveAdmin
         def build_main_content_wrapper
           div id: "main_content_wrapper" do
             div id: "main_content" do
+              puts "is collection empty?: #{collection_is_empty?}"
               main_content
             end
           end
