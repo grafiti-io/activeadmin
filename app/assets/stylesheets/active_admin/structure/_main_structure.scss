@@ -12,18 +12,25 @@
 
   #main_content_wrapper {
     float: left;
-    margin-left: 20px;
-    // width: 100%;
-    width: calc(100% - calc(#{$sidebar-width} + 20px));
+    width: 100%;
 
     #main_content{
-      // margin-right: $sidebar-width + ($section-padding * 2);
+      margin-right: $sidebar-width + ($section-padding * 2);
+    }
+  }
+
+  #main_content_wrapper.for_collection {
+    margin-left: 20px;
+    width: calc(100% - calc(#{$sidebar-width} + 20px));
+
+    #main_content.for_collection {
+      margin-right: 0;
       padding-right: $sidebar-width;
     }
   }
 
-  // &.without_sidebar #main_content_wrapper #main_content{ margin-right: 0; }
-  &.without_sidebar #main_content_wrapper #main_content{ margin-left: 0; }
+  &.without_sidebar #main_content_wrapper #main_content{ margin-right: 0; }
+  &.without_sidebar #main_content_wrapper.for_collection #main_content.for_collection{ margin-left: 0; }
 
   #sidebar {
     float: left;
