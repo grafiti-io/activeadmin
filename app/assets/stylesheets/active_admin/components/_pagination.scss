@@ -9,6 +9,7 @@
 
 .paginated_collection_contents {
   clear: both;
+  width: calc(100% + #{$sidebar-width});
 }
 
 .pagination {
