@@ -12,7 +12,6 @@
 
   #main_content_wrapper {
     float: left;
-    margin-left: 20px;
     width: 100%;
 
     #main_content{
@@ -21,6 +20,7 @@
   }
 
   #main_content_wrapper.for_collection {
+    margin-left: 20px;
     width: calc(100% - calc(#{$sidebar-width} + 20px));
 
     #main_content.for_collection {
