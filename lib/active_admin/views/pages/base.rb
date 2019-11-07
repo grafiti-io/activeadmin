@@ -95,8 +95,8 @@ module ActiveAdmin
 
         def build_main_content_wrapper
           is_collection_view = self.respond_to? :collection_is_empty?
-          div id: "main_content_wrapper", class: (is_collection_view ? 'main_content_wrapper_for_collection' : '') do
-            div id: "main_content", class: (is_collection_view ? 'main_content_for_collection' : '') do
+          div id: "main_content_wrapper", class: (is_collection_view ? 'for_collection' : '') do
+            div id: "main_content", class: (is_collection_view ? 'for_collection' : '') do
               main_content
             end
           end

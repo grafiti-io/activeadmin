@@ -20,17 +20,17 @@
     }
   }
 
-  #main_content_wrapper.main_content_wrapper_for_collection {
+  #main_content_wrapper.for_collection {
     width: calc(100% - calc(#{$sidebar-width} + 20px));
 
-    #main_content.main_content_for_collection {
+    #main_content.for_collection {
       margin-right: 0;
       padding-right: $sidebar-width;
     }
   }
 
-  // &.without_sidebar #main_content_wrapper #main_content{ margin-right: 0; }
-  &.without_sidebar #main_content_wrapper #main_content{ margin-left: 0; }
+  &.without_sidebar #main_content_wrapper #main_content{ margin-right: 0; }
+  &.without_sidebar #main_content_wrapper.for_collection #main_content.for_collection{ margin-left: 0; }
 
   #sidebar {
     float: left;
