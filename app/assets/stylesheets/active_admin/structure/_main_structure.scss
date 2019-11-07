@@ -12,10 +12,13 @@
 
   #main_content_wrapper {
     float: left;
-    width: 100%;
+    margin-left: 20px;
+    // width: 100%;
+    width: calc(100% - calc(#{$sidebar-width} + 20px));
 
     #main_content{
-      margin-right: $sidebar-width + ($section-padding * 2);
+      // margin-right: $sidebar-width + ($section-padding * 2);
+      padding-right: $sidebar-width;
     }
   }
 
